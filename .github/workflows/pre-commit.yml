@@ -15,7 +15,7 @@ jobs:
         cache-dependency-path: |
           pytypes.txt
           requirements.txt
-    - run: pip install mypy
+    - run: pip install mypy -r pytypes.txt -r requirements.txt
     - uses: pre-commit/action@v3.0.1
       with:
           extra_args: --all-files
