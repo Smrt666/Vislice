@@ -166,3 +166,8 @@ cython_debug/
 # !.vscode/tasks.json
 # !.vscode/launch.json
 # !.vscode/extensions.json
+
+# data
+data/*
+!data/README.md
+!data/sskj_words_static.txt
