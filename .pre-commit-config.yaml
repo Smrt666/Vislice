@@ -23,4 +23,4 @@ repos:
   hooks:
   - id: mypy
     language: system
-    args: [--strict --explicit-package-bases]
+    args: [--strict, --explicit-package-bases]
