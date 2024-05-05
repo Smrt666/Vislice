@@ -4,6 +4,10 @@ from solver.game import GameStateTree, get_tti
 
 
 class TestGameStateTree(unittest.TestCase):
+    def assertSolveEqual(self, left: tuple[int, str], right: tuple[int, str]) -> None:
+        self.assertEqual(left[0], right[0])
+        self.assertCountEqual(left[1], right[1])
+
     def test_get_tti(self) -> None:
         self.assertEqual(get_tti("abc", "abc"), ((0,), (1,), (2,)))
         self.assertEqual(get_tti("abacaba", "abc"), ((0, 2, 4, 6), (1, 5), (3,)))
@@ -26,3 +30,38 @@ class TestGameStateTree(unittest.TestCase):
         self.assertCountEqual(tree.group_words((0, 1, 2), [0, 3]), [(0, 2), (1,)])
         self.assertCountEqual(tree.group_words((0, 1, 2), [3]), [(0, 1, 2)])
         self.assertCountEqual(tree.group_words((0,), [3]), [(0,)])
+
+    def test_solve_single_word(self) -> None:
+        tree = GameStateTree(["abc"], "abcd")
+        self.assertSolveEqual(tree.solve((0,), ""), (0, "abc"))
+        self.assertSolveEqual(tree.solve((0,), "d"), (0, "abc"))
+
+    def test_solve_trivial(self) -> None:
+        tree = GameStateTree(["abc", "bac", "cab"], "abcd")
+        self.assertSolveEqual(tree.solve((0, 1, 2), ""), (0, "abc"))
+
+        tree = GameStateTree(["abc", "baa", "cab"], "abc")
+        self.assertSolveEqual(tree.solve((0, 1, 2), ""), (0, "ab"))
+        self.assertSolveEqual(tree.solve((0, 2), "ab"), (0, "c"))
+
+        tree = GameStateTree(["ababa", "babab", "bacba", "dacdc"], "abcd")
+        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (0, "a"))
+        tree.memo.clear()
+        self.assertSolveEqual(tree.solve((0, 1, 2), ""), (0, "ab"))
+
+    def test_solve_general(self) -> None:
+        tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb"], "abcd")
+        self.assertSolveEqual(tree.solve(tuple(range(7)), ""), (1, "a"))
+        self.assertSolveEqual(tree.solve((4, 5, 6), ""), (0, "b"))
+
+        tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc"], "abcd")
+        self.assertSolveEqual(tree.solve(tuple(range(8)), ""), (1, "b"))
+
+        tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc", "ddddd"], "abcd")
+        self.assertSolveEqual(tree.solve(tuple(range(9)), ""), (2, "b"))
+
+        tree = GameStateTree(["aa", "bb", "cc", "dd"], "abcd")
+        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (3, "a"))
+
+        tree = GameStateTree(["baa", "bbb", "ccb", "ddb"], "abcd")
+        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (1, "b"))
