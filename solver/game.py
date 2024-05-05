@@ -1,4 +1,5 @@
 from typing import Callable
+from functools import reduce
 
 
 """
@@ -20,7 +21,7 @@ def memoize(
     """Memoization decorator specifically for GameStateTree.solve."""
 
     def wrapper(self: "GameStateTree", word_list: tuple[int, ...], used_letters: str) -> tuple[int, str]:
-        key = used_letters, min(word_list)
+        key = "".join(sorted(used_letters)), min(word_list)
         if key in self.memo:
             return self.memo[key]
         result = func(self, word_list, used_letters)
@@ -28,6 +29,11 @@ def memoize(
         return result
 
     return wrapper
+
+
+def get_word_shape(pk: int, words_tti: list[tuple[tuple[int, ...], ...]], letters_i: list[int]) -> tuple[tuple[int, ...], ...]:
+    """For a given word returns positions of the letters in that word."""
+    return tuple(words_tti[pk][letter_i] for letter_i in letters_i)
 
 
 class GameStateTree:
@@ -43,11 +49,13 @@ class GameStateTree:
         # memoization table: word list (of ids)) -> tuple(minimal number of wrong guesses in worst case, letter to guess)
         # word list can be uniqely represented using only used letters (ordered) and smallest word in the list (lowest id)
         self.memo: dict[tuple[str, int], tuple[int, str]] = dict()
+        self.dependency: dict[tuple[str, int], list[tuple[str, int]]] = dict()  # memoization dependency graph
 
     @memoize
     def solve(self, word_list: tuple[int, ...], used_letters: str) -> tuple[int, str]:
         """Solves the game for the given word list.
         Returns the tuple (minimal number of wrong guesses in worst case, letter(s) to guess)."""
+        key = used_letters, min(word_list)
         if not word_list:
             return 0, ""
 
@@ -61,8 +69,10 @@ class GameStateTree:
         # if an unused letter is in all words, it is an obvious choice - nothing can be lost, can only be gained
         if shared_letters:
             max_n = 0
+            self.dependency[key] = []
             for group in self.group_words(word_list, [self.alphabet.index(c) for c in shared_letters]):
                 n, _ = self.solve(group, used_letters + shared_joined)
+                self.dependency[key].append((used_letters + shared_joined, min(group)))
                 if n > max_n:
                     max_n = n
             return n, shared_joined
@@ -85,15 +95,59 @@ class GameStateTree:
             if max_n < min_max_n:
                 min_max_n = max_n
                 best_letter = letter
+                self.dependency[key] = [(used_letters + letter, min(group)) for group in groups]
         return min_max_n, best_letter
 
     def group_words(self, word_list: tuple[int, ...], letters_i: list[int]) -> list[tuple[int, ...]]:
         """Groups the words by their tti."""
         groups: dict[tuple[tuple[int, ...], ...], list[int]] = {}
-        for key, element in zip(
-            map(lambda pk: tuple(self.words_tti[pk][letter_i] for letter_i in letters_i), word_list), word_list
-        ):
+        for key, element in zip(map(lambda pk: get_word_shape(pk, self.words_tti, letters_i), word_list), word_list):
             if key not in groups:
                 groups[key] = []
             groups[key].append(element)
         return [tuple(group) for group in groups.values()]
+
+    def solve_all(self) -> tuple[int, str]:
+        """Solves the game for all words."""
+        return self.solve(self.pks, "")
+
+    def _extract_strategies(self, root: tuple[str, int], result_list: list[dict[tuple[str, int], str]]) -> None:
+        _, letters = self.memo[root]
+        result_list.append({root: letters})
+        for dependency in self.dependency[root]:
+            self._extract_strategies(dependency, result_list)
+
+    def extract_strategy(self, root: tuple[str, int] = ("", 0)) -> dict[tuple[str, int], str]:
+        """Extracts the strategy from the memoization table."""
+        if not self.memo:
+            # solve_all has not been run. It can be computationally expensive, so it is not executed implicitly.
+            raise LookupError("No strategy found. Please run solve_all first.")
+        _, letters = self.memo[root]
+        results = [{root: letters}]
+        for dependency in self.dependency[root]:
+            self._extract_strategies(dependency, result_list=results)
+        return reduce(dict.update, results)  # type: ignore
+
+
+class Strategy:
+    """A class for managing strategies."""
+
+    def __init__(self, tree: GameStateTree | list[str]) -> None:
+        if isinstance(tree, list):
+            alphabet = set.union(*(set(word.lower()) for word in tree))
+            alphabet: str = "".join(sorted(alphabet))
+            tree = GameStateTree(tree, "abcdefghijklmnopqrstuvwxyz")
+            tree.solve_all()
+        self.original_words: list[str] = tree.original_words.copy()
+        self.alphabet: str = tree.alphabet
+        self.words: list[str] = tree.words.copy()
+        self.words_tti: list[tuple[tuple[int, ...], ...]] = tree.words_tti.copy()
+
+        self.strategy: dict[tuple[str, int], str] = tree.extract_strategy()
+
+    def get_strategy(self, word_list: list[int], used_letters: str) -> str:
+        """Returns the best letter to guess.
+        Assumes that word_list makes sense in the context of the used_letters.
+        - i.e. all of these letters are in the same positions."""
+        used_letters = "".join(sorted(used_letters))
+        return self.strategy[used_letters, min(word_list)]
