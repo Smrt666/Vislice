@@ -19,3 +19,8 @@ jobs:
     - uses: pre-commit/action@v3.0.1
       with:
           extra_args: --all-files
+  unittests:
+    runs-on: ubuntu-latest
+    needs: pre-commit
+    steps:
+    - run: python -m unittest
