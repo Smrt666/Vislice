@@ -71,7 +71,8 @@ class GameStateTree:
         # find letters in which the words differ (positions matter) - usable letters
         list_ttis = [{self.words_tti[pk][i] for pk in word_list} for i in range(len(self.alphabet))]
         usable_letters = [c for i, c in enumerate(self.alphabet) if len(list_ttis[i]) >= 2]
-        assert usable_letters, "No usable letters left, but there are words left."
+        if not usable_letters:  # all letters were found
+            return 0, ""
         min_max_n = len(self.alphabet) + 69  # some big number
         best_letter = ""
         for letter in usable_letters:
@@ -80,7 +81,7 @@ class GameStateTree:
             results = [self.solve(group, used_letters + letter) for group in groups]
             # get the worst case scenario, i.e. the maximum number of wrong guesses
             # if the letter is not in all of the words of the group, we guessed incorrectly
-            max_n = max(results[i][0] + int(all(letter in self.words[pk] for pk in groups[i])) for i in range(len(groups)))
+            max_n = max(results[i][0] + int(all(letter not in self.words[pk] for pk in groups[i])) for i in range(len(groups)))
             if max_n < min_max_n:
                 min_max_n = max_n
                 best_letter = letter
