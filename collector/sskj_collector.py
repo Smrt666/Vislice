@@ -35,9 +35,7 @@ def extract_words(content: BeautifulSoup) -> list[str]:
     return words
 
 
-def get_all_words(
-    lim: int | None = None, max_threads: int = 100, print_progress: bool = False
-) -> list[str]:
+def get_all_words(lim: int | None = None, max_threads: int = 100, print_progress: bool = False) -> list[str]:
     page1: BeautifulSoup = get_sskj_page(1)
     pagination = page1.find("ul", class_="pagination")
     assert isinstance(pagination, Tag), "Pagination not found on the first page."
@@ -106,9 +104,7 @@ def sanitize(words: list[str]) -> list[str]:
 
     # check problematic characters
     problems = [word for word in words if any(c not in alphabet for c in word.lower())]
-    ok_problems = str.maketrans(
-        {c: "" for c in " 0123456789-.,\"'xywqXYWQ" + alphabet + alphabet.upper()}
-    )
+    ok_problems = str.maketrans({c: "" for c in " 0123456789-.,\"'xywqXYWQ" + alphabet + alphabet.upper()})
     problems = [word for word in problems if word.translate(ok_problems).strip() != ""]
     if problems:
         print(f"Removing {len(problems)} words with special characters: {problems}")

@@ -6,9 +6,7 @@ parser = argparse.ArgumentParser(description="Script for this project.")
 subparsers = parser.add_subparsers(help="sub-command help", dest="action")
 
 # sskjcollect
-sskjcollect_parser = subparsers.add_parser(
-    "sskjcollect", help="collect words from SSKJ"
-)
+sskjcollect_parser = subparsers.add_parser("sskjcollect", help="collect words from SSKJ")
 sskjcollect_parser.add_argument(
     "--limit",
     action="store",
