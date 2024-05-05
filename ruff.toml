@@ -30,7 +30,7 @@ exclude = [
 # Support Python 3.10+.
 target-version = "py310"
 
-line-length = 88
+line-length = 128
 indent-width = 4
 
 [lint]
