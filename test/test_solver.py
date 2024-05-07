@@ -1,6 +1,6 @@
 import unittest
 
-from solver.game import GameStateTree, get_tti
+from solver.game import GameStateTree, get_tti, Strategy
 
 
 class TestGameStateTree(unittest.TestCase):
@@ -65,3 +65,55 @@ class TestGameStateTree(unittest.TestCase):
 
         tree = GameStateTree(["baa", "bbb", "ccb", "ddb"], "abcd")
         self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (1, "b"))
+
+        tree = GameStateTree(["abd", "abe", "acf", "acg", "hbd", "hbe", "hcf", "hcg"], "abcdefgh")
+        self.assertSolveEqual(tree.solve(tuple(range(8)), ""), (3, "a"))
+
+    def test_extract_strategy(self) -> None:
+        # Writing this tests is a pain. If the code is broken this will fail.
+        # If there are bugs this will probably not fail. Choice depends on this heavily.
+        # If there are bugs in this code, Choice will not work.
+        tree = GameStateTree(["baa", "bbb", "ccb", "ddb"], "abcd")
+        tree.solve_all()
+        self.assertEqual(
+            tree.extract_strategy(), {("", 0): "b", ("b", 0): "a", ("b", 1): "", ("b", 2): "c", ("bc", 2): "", ("bc", 3): "d"}
+        )
+
+        tree = GameStateTree(["abc", "bac", "cab"], "abc")
+        tree.solve_all()
+        self.assertEqual(tree.extract_strategy(), {("", 0): "abc"})
+
+
+class TestChoice(unittest.TestCase):
+    def test_shallow(self) -> None:
+        strat = Strategy(["abc", "bac", "cab"])
+        self.assertEqual(str(strat.start), "['abc', {'bac': 'WON!', 'cab': 'WON!', 'abc': 'WON!'}]")
+
+        strat = Strategy(["abd", "abe", "acf", "acg", "hbd", "hbe", "hcf", "hcg"])
+        self.assertEqual(
+            strat.start.json_or_won(),
+            [
+                "a",
+                {
+                    "___": [
+                        "h",
+                        {
+                            "h__": [
+                                "b",
+                                {
+                                    "hb_": ["d", {"hbd": "WON!", "hb_": ["e", {"hbe": "WON!"}]}],
+                                    "h__": ["c", {"hc_": ["f", {"hcf": "WON!", "hc_": ["g", {"hcg": "WON!"}]}]}],
+                                },
+                            ]
+                        },
+                    ],
+                    "a__": [
+                        "b",
+                        {
+                            "ab_": ["d", {"abd": "WON!", "ab_": ["e", {"abe": "WON!"}]}],
+                            "a__": ["c", {"ac_": ["f", {"acf": "WON!", "ac_": ["g", {"acg": "WON!"}]}]}],
+                        },
+                    ],
+                },
+            ],
+        )
