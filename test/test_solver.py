@@ -85,7 +85,15 @@ class TestGameStateTree(unittest.TestCase):
 
 
 class TestChoice(unittest.TestCase):
-    def test_init(self) -> None: ...
+    def test_init(self) -> None:
+        Strategy(["abc", "bac", "cab"])
+        tree = GameStateTree(["abc", "bac", "cab"], "abc")
+        tree.solve_all()
+        Strategy(tree)
+
+        tree = GameStateTree(["baa", "bbb", "ccb", "ddb"], "abcd")
+        with self.assertRaises(LookupError):
+            Strategy(tree)
 
     def test_strategy(self) -> None:
         strat = Strategy(["abc", "bac", "cab"])
