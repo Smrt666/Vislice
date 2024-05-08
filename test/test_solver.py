@@ -85,7 +85,9 @@ class TestGameStateTree(unittest.TestCase):
 
 
 class TestChoice(unittest.TestCase):
-    def test_shallow(self) -> None:
+    def test_init(self) -> None: ...
+
+    def test_strategy(self) -> None:
         strat = Strategy(["abc", "bac", "cab"])
         self.assertEqual(str(strat.start), "['abc', {'bac': 'WON!', 'cab': 'WON!', 'abc': 'WON!'}]")
 
@@ -114,6 +116,43 @@ class TestChoice(unittest.TestCase):
                             "a__": ["c", {"ac_": ["f", {"acf": "WON!", "ac_": ["g", {"acg": "WON!"}]}]}],
                         },
                     ],
+                },
+            ],
+        )
+
+        strat = Strategy(["ababa", "babab", "bacba", "dacdc"])
+        self.assertEqual(
+            strat.start.json_or_won(),
+            [
+                "a",
+                {
+                    "_a__a": ["bc", {"bacba": "WON!"}],
+                    "_a___": ["cd", {"dacdc": "WON!"}],
+                    "_a_a_": ["b", {"babab": "WON!"}],
+                    "a_a_a": ["b", {"ababa": "WON!"}],
+                },
+            ],
+        )
+
+        strat = Strategy(["aa", "bb", "cc", "dd"])
+        self.assertEqual(
+            strat.start.json_or_won(),
+            ["a", {"aa": "WON!", "__": ["b", {"bb": "WON!", "__": ["c", {"cc": "WON!", "__": ["d", {"dd": "WON!"}]}]}]}],
+        )
+
+        strat = Strategy(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc", "ddddd"])
+        self.assertEqual(
+            strat.start.json_or_won(),
+            [
+                "b",
+                {
+                    "_b__b": ["cd", {"cbdcb": "WON!"}],
+                    "bbbbb": "WON!",
+                    "b_b_b": ["a", {"babab": "WON!"}],
+                    "b__b_": ["ac", {"bacba": "WON!"}],
+                    "_b_b_": ["a", {"ababa": "WON!"}],
+                    "_____": ["c", {"__c_c": ["ad", {"dacdc": "WON!"}], "ccccc": "WON!", "_____": ["d", {"ddddd": "WON!"}]}],
+                    "b____": ["d", {"bdddd": "WON!"}],
                 },
             ],
         )
