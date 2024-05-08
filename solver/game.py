@@ -5,7 +5,11 @@ from typing import Callable
 Every word gets triple representation:
  - id as a number
  - string  # lower/upper case is not important for hangman, so every word is converted to lower case
- - tti: tuple of tuples of integers: for each letter a tuple tells the positions of the letter in the word
+ - tti (WordShape): tuple of tuples of integers: for each letter a tuple tells the positions of the letter in the word
+"""
+
+"""The best strategy
+We define the best strategy as the one that minimizes the number of wrong guesses in the worst case scenario.
 """
 
 type WordShape = tuple[tuple[int, ...], ...]  # type: ignore[valid-type]
@@ -52,6 +56,8 @@ class GameStateTree:
         # word list can be uniqely represented using only used letters (ordered) and smallest word in the list (lowest id)
         self.memo: dict[tuple[str, int], tuple[int, str]] = dict()
         self.dependency: dict[tuple[str, int], list[tuple[str, int]]] = dict()  # memoization dependency graph
+        # dependency: (used_letters, min_word_id) -> [(used_letters, min_word_id), ...]
+        # used_letters must be sorted
 
     @memoize
     def solve(self, word_list: tuple[int, ...], used_letters: str) -> tuple[int, str]:
@@ -112,7 +118,7 @@ class GameStateTree:
         return [tuple(group) for group in groups.values()]
 
     def solve_all(self) -> tuple[int, str]:
-        """Solves the game for all words."""
+        """Solves the game for all words. The same as calling solve for all words with no starting used letters."""
         return self.solve(self.pks, "")
 
     def _extract_strategies(self, root: tuple[str, int], result_list: list[dict[tuple[str, int], str]]) -> None:
@@ -124,7 +130,8 @@ class GameStateTree:
             self._extract_strategies(dependency, result_list)
 
     def extract_strategy(self, root: tuple[str, int] = ("", 0)) -> dict[tuple[str, int], str]:
-        """Extracts the strategy from the memoization table. root's used_letters should sorted."""
+        """Extracts the strategy from the memoization table. root's used_letters should sorted.
+        All it does is recursively extract the minimal sufficient number of decisions from the memoization table."""
         if not self.memo:
             # solve_all has not been run. It can be computationally expensive, so it is not executed implicitly.
             raise LookupError("No strategy found. Please run solve_all first.")
@@ -144,6 +151,10 @@ class Strategy:
     """A class for managing strategies."""
 
     def __init__(self, tree: GameStateTree | list[str]) -> None:
+        """Initializes the strategy from a tree or a list of words.
+        If a list of words is provided, it is converted to a tree and solve_all is called.
+        Attribute start can be used to access the root of the decision tree, which is of type Choice."""
+
         if isinstance(tree, list):
             alphabet = set.union(*(set(word.lower()) for word in tree))
             alphabet: str = "".join(sorted(alphabet))
@@ -169,6 +180,8 @@ class Choice:
     """A tree strategy representation."""
 
     def __init__(self, used_letters: str, word_list: list[int], strategy: Strategy) -> None:
+        """Initializes the choice. With the help of the strategy, it initializes
+        all later choices that may be needed when following the optimal strategy."""
         assert word_list, "Choice should have at least one word"
 
         self.strategy: Strategy = strategy
@@ -188,12 +201,12 @@ class Choice:
             self.children = {}
             return
 
+        # recursive initialization of the children - all poosible future choices
         self.choice = self.strategy.get_strategy(
             word_list=word_list,
             used_letters=used_letters,
         )
         self.letterids = [self.strategy.alphabet.index(letter) for letter in self.choice]
-        # self.choice in positions:
         shapes = [get_word_shape(pk, self.strategy.words_tti, self.letterids) for pk in word_list]
         self.shapes = list(set(shapes))
         shape_words: dict[WordShape, list[int]] = {shape: [] for shape in self.shapes}
