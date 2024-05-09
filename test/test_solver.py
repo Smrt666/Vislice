@@ -50,6 +50,15 @@ class TestGameStateTree(unittest.TestCase):
         self.assertSolveEqual(tree.solve((0, 1, 2), ""), (0, "ab"))
 
     def test_solve_general(self) -> None:
+        tree = GameStateTree(["aa", "bb", "cc", "dd"], "abcd")
+        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (3, "a"))
+
+        tree = GameStateTree(["baa", "bbb", "ccb", "ddb"], "abcd")
+        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (1, "b"))
+
+        tree = GameStateTree(["abd", "abe", "acf", "acg", "hbd", "hbe", "hcf", "hcg"], "abcdefgh")
+        self.assertSolveEqual(tree.solve(tuple(range(8)), ""), (3, "a"))
+
         tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb"], "abcd")
         self.assertSolveEqual(tree.solve(tuple(range(7)), ""), (1, "a"))
         self.assertSolveEqual(tree.solve((4, 5, 6), ""), (0, "b"))
@@ -59,15 +68,6 @@ class TestGameStateTree(unittest.TestCase):
 
         tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc", "ddddd"], "abcd")
         self.assertSolveEqual(tree.solve(tuple(range(9)), ""), (2, "b"))
-
-        tree = GameStateTree(["aa", "bb", "cc", "dd"], "abcd")
-        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (3, "a"))
-
-        tree = GameStateTree(["baa", "bbb", "ccb", "ddb"], "abcd")
-        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (1, "b"))
-
-        tree = GameStateTree(["abd", "abe", "acf", "acg", "hbd", "hbe", "hcf", "hcg"], "abcdefgh")
-        self.assertSolveEqual(tree.solve(tuple(range(8)), ""), (3, "a"))
 
     def test_extract_strategy(self) -> None:
         # Writing this tests is a pain. If the code is broken this will fail.
@@ -83,6 +83,14 @@ class TestGameStateTree(unittest.TestCase):
         tree.solve_all()
         self.assertEqual(tree.extract_strategy(), {("", 0): "abc"})
 
+        tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc", "ddddd"], "abcd")
+        tree.solve_all()
+        tree.extract_strategy()
+
+        tree = GameStateTree(["abd", "abe", "acf", "acg", "hbd", "hbe", "hcf", "hcg"], "abcdefgh")
+        tree.solve_all()
+        tree.extract_strategy()
+
 
 class TestChoice(unittest.TestCase):
     def test_init(self) -> None:
@@ -97,7 +105,7 @@ class TestChoice(unittest.TestCase):
 
     def test_strategy(self) -> None:
         strat = Strategy(["abc", "bac", "cab"])
-        self.assertEqual(str(strat.start), "['abc', {'bac': 'WON!', 'cab': 'WON!', 'abc': 'WON!'}]")
+        self.assertEqual(str(strat.start), '["abc", {"bac": "WON!", "cab": "WON!", "abc": "WON!"}]')
 
         strat = Strategy(["abd", "abe", "acf", "acg", "hbd", "hbe", "hcf", "hcg"])
         self.assertEqual(

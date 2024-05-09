@@ -1,4 +1,5 @@
-from typing import Callable
+from typing import Callable, Optional
+import json
 
 
 """
@@ -22,16 +23,28 @@ def get_tti(word: str, alphabet: str) -> WordShape:
 
 
 def memoize(
-    func: Callable[["GameStateTree", tuple[int, ...], str], tuple[int, str]],
-) -> Callable[["GameStateTree", tuple[int, ...], str], tuple[int, str]]:
+    func: Callable[["GameStateTree", tuple[int, ...], str, Optional[int]], tuple[int, str]],
+) -> Callable[["GameStateTree", tuple[int, ...], str, Optional[int]], tuple[int, str]]:
     """Memoization decorator specifically for GameStateTree.solve."""
 
-    def wrapper(self: "GameStateTree", word_list: tuple[int, ...], used_letters: str) -> tuple[int, str]:
+    def wrapper(
+        self: "GameStateTree", word_list: tuple[int, ...], used_letters: str, kill_after: int | None = None
+    ) -> tuple[int, str]:
         key = "".join(sorted(used_letters)), min(word_list)
         if key in self.memo:
             return self.memo[key]
-        result = func(self, word_list, used_letters)
-        self.memo[key] = result
+
+        if kill_after is not None and kill_after < 0:
+            self.killed[key] = 0
+            return 0, ""
+        if kill_after is not None and key in self.killed and self.killed[key] > kill_after:
+            return self.killed[key], ""
+
+        result = func(self, word_list, used_letters, kill_after)
+        if kill_after is not None and result[0] > kill_after:
+            self.killed[key] = result[0]
+        else:
+            self.memo[key] = result
         return result
 
     return wrapper
@@ -55,12 +68,13 @@ class GameStateTree:
         # memoization table: word list (of ids)) -> tuple(minimal number of wrong guesses in worst case, letter to guess)
         # word list can be uniqely represented using only used letters (ordered) and smallest word in the list (lowest id)
         self.memo: dict[tuple[str, int], tuple[int, str]] = dict()
+        self.killed: dict[tuple[str, int], int] = dict()  # word -> lower bound of wrong guesses
         self.dependency: dict[tuple[str, int], list[tuple[str, int]]] = dict()  # memoization dependency graph
         # dependency: (used_letters, min_word_id) -> [(used_letters, min_word_id), ...]
         # used_letters must be sorted
 
     @memoize
-    def solve(self, word_list: tuple[int, ...], used_letters: str) -> tuple[int, str]:
+    def solve(self, word_list: tuple[int, ...], used_letters: str, kill_after: Optional[int] = None) -> tuple[int, str]:
         """Solves the game for the given word list.
         Returns the tuple (minimal number of wrong guesses in worst case, letter(s) to guess)."""
         used_letters = "".join(sorted(used_letters))
@@ -70,6 +84,8 @@ class GameStateTree:
 
         # trivial cases
         unused_letters = set(self.alphabet) - set(used_letters)
+        if kill_after is None:
+            kill_after = len(unused_letters) + 1  # infinity
         shared_letters: set[str] = unused_letters.intersection(*(set(self.words[pk]) for pk in word_list))
         shared_joined = "".join(sorted(shared_letters))
         # if all missing letters are in every word, we can guess all of them  - edge case
@@ -81,7 +97,7 @@ class GameStateTree:
             self.dependency[key] = []
             for group in self.group_words(word_list, [self.alphabet.index(c) for c in shared_letters]):
                 used_shared = "".join(sorted(used_letters + shared_joined))
-                n, _ = self.solve(group, used_shared)
+                n, _ = self.solve(group, used_shared, kill_after=kill_after)
                 self.dependency[key].append((used_shared, min(group)))
                 if n > max_n:
                     max_n = n
@@ -93,15 +109,24 @@ class GameStateTree:
         usable_letters = [c for i, c in enumerate(self.alphabet) if len(list_ttis[i]) >= 2]
         if not usable_letters:  # all letters were found
             return 0, ""
-        min_max_n = len(self.alphabet) + 69  # some big number
+        min_max_n = len(unused_letters) + 1  # some big number
         best_letter = ""
+        kill_child = kill_after
         for letter in usable_letters:
             # group the words by the letter's position in the word
             groups = self.group_words(word_list, [self.alphabet.index(letter)])
-            results = [self.solve(group, used_letters + letter) for group in groups]
-            # get the worst case scenario, i.e. the maximum number of wrong guesses
-            # if the letter is not in all of the words of the group, we guessed incorrectly
-            max_n = max(results[i][0] + int(all(letter not in self.words[pk] for pk in groups[i])) for i in range(len(groups)))
+            max_n = 0
+            for i, group in enumerate(groups):
+                # if the letter is not in all of the words of the group, we guessed incorrectly
+                errors = int(all(letter not in self.words[pk] for pk in groups[i]))
+                result = self.solve(group, used_letters + letter, kill_after=kill_child - errors)
+                value = result[0] + errors
+                # get the worst case scenario, i.e. the maximum number of wrong guesses
+                if max_n < value:
+                    max_n = value
+            if max_n < kill_child:
+                kill_child = max_n
+            # we are minimizing the worst case scenario
             if max_n < min_max_n:
                 min_max_n = max_n
                 best_letter = letter
@@ -158,7 +183,7 @@ class Strategy:
         if isinstance(tree, list):
             alphabet = set.union(*(set(word.lower()) for word in tree))
             alphabet: str = "".join(sorted(alphabet))
-            tree = GameStateTree(tree, "abcdefghijklmnopqrstuvwxyz")
+            tree = GameStateTree(tree, alphabet)
             tree.solve_all()
         self.original_words: list[str] = tree.original_words.copy()
         self.alphabet: str = tree.alphabet
@@ -166,6 +191,7 @@ class Strategy:
         self.words_tti: list[WordShape] = tree.words_tti.copy()
 
         self.strategy: dict[tuple[str, int], str] = tree.extract_strategy()
+        self.max_errors, _ = tree.solve_all()
         self.start = Choice("", list(tree.pks), self)
 
     def get_strategy(self, word_list: list[int], used_letters: str) -> str:
@@ -244,4 +270,4 @@ class Choice:
         return [self.choice, {all_shapes[i]: self.children[shape].json_or_won() for i, shape in enumerate(self.shapes)}]
 
     def __str__(self) -> str:
-        return str(self.json_or_won())
+        return json.dumps(self.json_or_won())
