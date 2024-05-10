@@ -34,14 +34,14 @@ def memoize(
         if key in self.memo:
             return self.memo[key]
 
-        if kill_after is not None and kill_after < 0:
+        if kill_after is not None and kill_after <= 0:
             self.killed[key] = 0
             return 0, ""
-        if kill_after is not None and key in self.killed and self.killed[key] > kill_after:
+        if kill_after is not None and key in self.killed and self.killed[key] >= kill_after:
             return self.killed[key], ""
 
         result = func(self, word_list, used_letters, kill_after)
-        if kill_after is not None and result[0] > kill_after:
+        if kill_after is not None and result[0] >= kill_after:
             self.killed[key] = result[0]
         else:
             self.memo[key] = result
@@ -101,7 +101,7 @@ class GameStateTree:
                 self.dependency[key].append((used_shared, min(group)))
                 if n > max_n:
                     max_n = n
-            return n, shared_joined
+            return max_n, shared_joined
 
         # general case - try all usable letters and choose the best one
         # find letters in which the words differ (positions matter) - usable letters
@@ -109,7 +109,7 @@ class GameStateTree:
         usable_letters = [c for i, c in enumerate(self.alphabet) if len(list_ttis[i]) >= 2]
         if not usable_letters:  # all letters were found
             return 0, ""
-        min_max_n = len(unused_letters) + 1  # some big number
+        min_max_n = min(len(unused_letters) + 1, kill_after)  # some big number
         best_letter = ""
         kill_child = kill_after
         for letter in usable_letters:
@@ -131,6 +131,12 @@ class GameStateTree:
                 min_max_n = max_n
                 best_letter = letter
                 self.dependency[key] = [("".join(sorted(used_letters + letter)), min(group)) for group in groups]
+                assert all(group in self.memo for group in self.dependency[key])
+                for group in groups:
+                    group_key = "".join(sorted(used_letters + letter)), min(group)
+                    if group_key in self.killed and self.killed[group_key] >= kill_after:
+                        assert False, "This should not happen."
+                    assert group_key in self.memo, f"Memo error: {group_key}, {kill_after}."
         return min_max_n, best_letter
 
     def group_words(self, word_list: tuple[int, ...], letters_i: list[int]) -> list[tuple[int, ...]]:
@@ -200,6 +206,14 @@ class Strategy:
         - i.e. all of these letters are in the same positions."""
         used_letters = "".join(sorted(used_letters))
         return self.strategy[used_letters, min(word_list)]
+
+    def json(self) -> dict[str, ChoiceJSON | list[str]]:
+        return {
+            "max_errors": self.max_errors,
+            "alphabet": self.alphabet,
+            "words": self.words,
+            "strategy": self.start.json_or_won(),
+        }
 
 
 class Choice:

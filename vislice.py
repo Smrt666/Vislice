@@ -4,6 +4,7 @@ from collector.sskj_collector import get_all_words, sanitize
 from solver.game import Strategy
 
 import json
+import time
 
 parser = argparse.ArgumentParser(description="Script for this project.")
 subparsers = parser.add_subparsers(help="sub-command help", dest="action")
@@ -104,11 +105,11 @@ match args := parser.parse_args():
             words = words[:limit]
 
         print(f"Found {len(words)} words to find strategy for. Computing strategy... (Might take a while.)")
-        print(words)
+        time0 = time.time()
         strategy = Strategy(words)
         print(f"Strategy found. Maximal number of wrong guessess is {strategy.max_errors}. Saving to {output.name}...")
-        output.write(json.dumps(strategy.start.json_or_won(), indent=1, ensure_ascii=False))
-        print(f"Stored strategy for {len(words)} words into {output.name}.")
+        output.write(json.dumps(strategy.json(), indent=1, ensure_ascii=False))
+        print(f"Stored strategy for {len(words)} words into {output.name}. Took {time.time() - time0:.2f} seconds.")
     case _:
         print(f"Unsupported command arguments: {vars(args)}")
         parser.print_help()
