@@ -116,7 +116,10 @@ class GameStateTree:
         min_max_n = min(len(unused_letters) + 1, kill_after)  # some big number
         best_letter = ""
         kill_child = kill_after
-        for letter in usable_letters:
+        # start with the most frequent letters, that is a good strategy
+        # the sooner we get better results, the better - more branches can be killed sooner
+        letter_frequency = {letter: sum(self.words[i].count(letter) for i in word_list) for letter in usable_letters}
+        for letter in sorted(usable_letters, key=lambda c: letter_frequency[c], reverse=True):
             # group the words by the letter's position in the word
             groups = self.group_words(word_list, [self.alphabet.index(letter)])
             max_n = 0
