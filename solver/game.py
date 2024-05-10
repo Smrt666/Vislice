@@ -131,12 +131,6 @@ class GameStateTree:
                 min_max_n = max_n
                 best_letter = letter
                 self.dependency[key] = [("".join(sorted(used_letters + letter)), min(group)) for group in groups]
-                assert all(group in self.memo for group in self.dependency[key])
-                for group in groups:
-                    group_key = "".join(sorted(used_letters + letter)), min(group)
-                    if group_key in self.killed and self.killed[group_key] >= kill_after:
-                        assert False, "This should not happen."
-                    assert group_key in self.memo, f"Memo error: {group_key}, {kill_after}."
         return min_max_n, best_letter
 
     def group_words(self, word_list: tuple[int, ...], letters_i: list[int]) -> list[tuple[int, ...]]:

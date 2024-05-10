@@ -18,6 +18,11 @@ so v `data/sskj_words_static.txt`. Podatke je možno dobiti tudi s pomočjo skri
 `vislice.py sskjcollect -h` za več informacij.) Z vklopljeno opcijo `--raw` je sortiranje drugačno (splošno sortiranje nizov).
 Brez te opcije se sortira po slovenski abecedi.
 
+### Izračun strategije
+Izračun strategije lahko poženemo z ukazom `vislice.py getstrategy {dolzina_besed} {datoteka_z_besedami}`.
+Primer: `vislice.py getstrategy 5 data/sskj_words.txt --limit 150`. Za 150 ta primer potrebuje program približno
+minuto, tako da za večje količine besed še ni uporaben.
+
 ## Delo na projektu
 Priprava okolja (na sistemih Windows):
 * `py -m venv venv`
