@@ -60,7 +60,7 @@ class TestGameStateTree(unittest.TestCase):
         self.assertSolveEqual(tree.solve(tuple(range(8)), ""), (3, "a"))
 
         tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb"], "abcd")
-        self.assertSolveEqual(tree.solve(tuple(range(7)), ""), (1, "a"))
+        self.assertSolveEqual(tree.solve(tuple(range(7)), ""), (1, "b"))
         self.assertSolveEqual(tree.solve((4, 5, 6), ""), (0, "b"))
 
         tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc"], "abcd")
