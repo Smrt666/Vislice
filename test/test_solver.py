@@ -69,6 +69,9 @@ class TestGameStateTree(unittest.TestCase):
         tree = GameStateTree(["ababa", "babab", "bacba", "dacdc", "cbdcb", "bdddd", "bbbbb", "ccccc", "ddddd"], "abcd")
         self.assertSolveEqual(tree.solve(tuple(range(9)), ""), (2, "b"))
 
+        tree = GameStateTree(["efgaa", "efgbb", "efgcc", "efgdd"], "abcdefg")
+        self.assertSolveEqual(tree.solve((0, 1, 2, 3), ""), (3, "efg"))
+
     def test_extract_strategy(self) -> None:
         # Writing this tests is a pain. If the code is broken this will fail.
         # If there are bugs this will probably not fail. Choice depends on this heavily.
