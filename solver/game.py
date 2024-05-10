@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Optional, Protocol
 import json
 
 
@@ -13,8 +13,14 @@ Every word gets triple representation:
 We define the best strategy as the one that minimizes the number of wrong guesses in the worst case scenario.
 """
 
-type WordShape = tuple[tuple[int, ...], ...]  # type: ignore[valid-type]
-type ChoiceJSON = list[str | dict[str, "ChoiceJSON"]] | str  # type: ignore[valid-type]
+type WordShape = tuple[tuple[int, ...], ...]
+type ChoiceJSON = list[str | dict[str, "ChoiceJSON"]] | str
+
+
+class SGTSolveFunc(Protocol):
+    def __call__(
+        _self, self: "GameStateTree", word_list: tuple[int, ...], used_letters: str, *, kill_after: Optional[int] = None
+    ) -> tuple[int, str]: ...
 
 
 def get_tti(word: str, alphabet: str) -> WordShape:
@@ -22,13 +28,11 @@ def get_tti(word: str, alphabet: str) -> WordShape:
     return tuple(tuple(i for i, c in enumerate(word) if c == letter) for letter in alphabet)
 
 
-def memoize(
-    func: Callable[["GameStateTree", tuple[int, ...], str, Optional[int]], tuple[int, str]],
-) -> Callable[["GameStateTree", tuple[int, ...], str, Optional[int]], tuple[int, str]]:
+def memoize(func):
     """Memoization decorator specifically for GameStateTree.solve."""
 
     def wrapper(
-        self: "GameStateTree", word_list: tuple[int, ...], used_letters: str, kill_after: int | None = None
+        self: "GameStateTree", word_list: tuple[int, ...], used_letters: str, *, kill_after: int | None = None
     ) -> tuple[int, str]:
         key = "".join(sorted(used_letters)), min(word_list)
         if key in self.memo:
@@ -40,7 +44,7 @@ def memoize(
         if kill_after is not None and key in self.killed and self.killed[key] >= kill_after:
             return self.killed[key], ""
 
-        result = func(self, word_list, used_letters, kill_after)
+        result = func(self, word_list, used_letters, kill_after=kill_after)
         if kill_after is not None and result[0] >= kill_after:
             self.killed[key] = result[0]
         else:
@@ -74,7 +78,7 @@ class GameStateTree:
         # used_letters must be sorted
 
     @memoize
-    def solve(self, word_list: tuple[int, ...], used_letters: str, kill_after: Optional[int] = None) -> tuple[int, str]:
+    def solve(self, word_list: tuple[int, ...], used_letters: str, *, kill_after: Optional[int] = None) -> tuple[int, str]:
         """Solves the game for the given word list.
         Returns the tuple (minimal number of wrong guesses in worst case, letter(s) to guess)."""
         used_letters = "".join(sorted(used_letters))
@@ -182,7 +186,7 @@ class Strategy:
 
         if isinstance(tree, list):
             alphabet = set.union(*(set(word.lower()) for word in tree))
-            alphabet: str = "".join(sorted(alphabet))
+            alphabet = "".join(sorted(alphabet))
             tree = GameStateTree(tree, alphabet)
             tree.solve_all()
         self.original_words: list[str] = tree.original_words.copy()
@@ -201,7 +205,7 @@ class Strategy:
         used_letters = "".join(sorted(used_letters))
         return self.strategy[used_letters, min(word_list)]
 
-    def json(self) -> dict[str, ChoiceJSON | list[str]]:
+    def json(self) -> dict[str, ChoiceJSON | list[str] | int | str]:
         return {
             "max_errors": self.max_errors,
             "alphabet": self.alphabet,

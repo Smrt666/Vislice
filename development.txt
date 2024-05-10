@@ -1,5 +1,5 @@
 -r requirements.txt
 -r pytypes.txt
 ruff>=0.4.2
-mypy>=1.10.0
+pyright>=1.1.362
 pre-commit>=3.7.0
