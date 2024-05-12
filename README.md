@@ -20,8 +20,9 @@ Brez te opcije se sortira po slovenski abecedi.
 
 ### Izračun strategije
 Izračun strategije lahko poženemo z ukazom `vislice.py getstrategy {dolzina_besed} {datoteka_z_besedami}`.
-Primer: `vislice.py getstrategy 5 data/sskj_words_static.txt --limit 150`. Za 150 ta primer potrebuje program približno
-15 sekund, tako da za večje količine besed še ni uporaben.
+Primer: `vislice.py getstrategy 5 data/sskj_words_static.txt --limit 150`. Za ta primer potrebuje program približno
+3 sekunde. Pri 200 traja približno minuto. Ta primer je relativno enostaven za računati, tako da bo za delovanje na vseh besedah
+potrebnih še kar nekaj izboljšav.
 
 ## Delo na projektu
 Priprava okolja (na sistemih Windows):

@@ -13,6 +13,32 @@ Every word gets triple representation:
 We define the best strategy as the one that minimizes the number of wrong guesses in the worst case scenario.
 """
 
+"""
+Solve strategy:
+    - We start with the whole word list and no used letters.
+    - We find the best letter to guess:
+        * if all words share some letters, we can guess all of them. It is always the best choice: in the worst case
+          there is another strategy with the same number of wrong guesses.
+        * otherwise, we try all usable letters and choose the best one
+        * words are grouped by the position of that letter in the word
+        * we recursively call the solve function for each group
+
+Optimizations on solve
+ - memoization: we store the results of the solve function in a table
+    * When trying letters order is important, but the order for the same group is not. So we can memoize the results.
+    * We can uniquely represent the group using only used letters (sorted) and the smallest word in the list.
+ - killing branches: if we know that a branch will not be the best, we can kill it before calculating everything
+    * if already found a solution with n wrong guesses, we can kill the branch if it has n or more wrong guesses
+    * the killing can be done when recursively solving the groups. The cost (number of wrong guesses) for the letter
+      can only increase, so we don't need to calculate the rest of the groups if we already have a better solution.
+    * we start solving for groups that are likely to give the worst results, because we can kill them sooner
+      The largest groups are likely to give the worst results, so we start with them. Starting with the the group
+      without the guessed letter did not seem to work that well.
+    * when trying letters, we start with the most frequent ones, because they are likely to give better results
+      The sooner we get better results for letters, the more branches can we kill.
+      Sorting letters by size of the largest group and the size of the group without the letter did not seem to work that well.
+"""
+
 type WordShape = tuple[tuple[int, ...], ...]
 type ChoiceJSON = list[str | dict[str, "ChoiceJSON"]] | str
 
@@ -123,7 +149,9 @@ class GameStateTree:
             # group the words by the letter's position in the word
             groups = self.group_words(word_list, [self.alphabet.index(letter)])
             max_n = 0
-            for i, group in enumerate(groups):
+            group_enumeration = enumerate(groups)
+            group_enumeration = sorted(group_enumeration, key=lambda i_group: len(i_group[1]), reverse=True)
+            for i, group in group_enumeration:
                 # if the letter is not in all of the words of the group, we guessed incorrectly
                 errors = int(all(letter not in self.words[pk] for pk in groups[i]))
                 result = self.solve(group, used_letters + letter, kill_after=kill_child - errors)
@@ -131,6 +159,8 @@ class GameStateTree:
                 # get the worst case scenario, i.e. the maximum number of wrong guesses
                 if max_n < value:
                     max_n = value
+                    if max_n >= kill_child:
+                        break
             if max_n < kill_child:
                 kill_child = max_n
             # we are minimizing the worst case scenario
