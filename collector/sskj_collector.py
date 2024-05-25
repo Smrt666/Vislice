@@ -1,7 +1,8 @@
 import requests
 from bs4 import BeautifulSoup, Tag
-from threading import Thread
-from queue import Queue
+from collector.utils import multirun
+from typing import Callable
+
 
 url = "https://www.fran.si/iskanje"
 
@@ -35,7 +36,26 @@ def extract_words(content: BeautifulSoup) -> list[str]:
     return words
 
 
-def get_all_words(lim: int | None = None, max_threads: int = 100, print_progress: bool = False) -> list[str]:
+def extract_nouns(content: BeautifulSoup) -> list[str]:
+    word_paragraphs = content.find_all("div", class_="entry-content")
+    words: list[str] = []
+    for paragraph in word_paragraphs:
+        # first <a href=...> child is the word
+        word: str = paragraph.find("a").text
+        word_m = paragraph.find("span", title="samostalnik moškega spola")
+        word_f = paragraph.find("span", title="samostalnik ženskega spola")
+        word_n = paragraph.find("span", title="samostalnik srednjega spola")
+        if any(g is not None for g in (word_m, word_f, word_n)):
+            words.append(word)
+    return words
+
+
+def get_all_words(
+    lim: int | None = None,
+    max_threads: int = 100,
+    print_progress: bool = False,
+    word_extractor: Callable[[BeautifulSoup], list[str]] = extract_words,
+) -> list[str]:
     page1: BeautifulSoup = get_sskj_page(1)
     pagination = page1.find("ul", class_="pagination")
     assert isinstance(pagination, Tag), "Pagination not found on the first page."
@@ -46,31 +66,13 @@ def get_all_words(lim: int | None = None, max_threads: int = 100, print_progress
         last_page = min(last_page, lim)
 
     words: list[str] = []
-    threads: Queue[Thread] = Queue()
     if print_progress:
         print(f"Collecting words from {last_page} pages...")
-    progress = 0
-    for i in range(1, last_page + 1):
-        while threads.qsize() >= max_threads:
-            thread = threads.get()
-            thread.join()
-            progress += 1
-
-        thread = Thread(target=lambda: words.extend(extract_words(get_sskj_page(i))))
-        threads.put(thread)
-        thread.start()
-
-        if print_progress and progress % 13 == 1:  # 13 is a cool random number
-            print(f"{progress}/{last_page} pages collected", end=" " * 10 + "\r")
-
-    while not threads.empty():
-        thread = threads.get()
-        thread.join()
-        progress += 1
-        if print_progress and progress % 13 == 1:
-            print(f"{progress}/{last_page} pages collected", end=" " * 10 + "\r")
+    tasks = [lambda i=i: words.extend(word_extractor(get_sskj_page(i))) for i in range(1, last_page + 1)]
+    progress_printer = None
     if print_progress:
-        print(f"Finished collecting {progress} pages." + " " * 10)
+        progress_printer = lambda progress: print(f"{progress}/{last_page} pages collected", end=" " * 10 + "\r")  # noqa: E731
+    multirun(tasks, max_threads, print_progress=progress_printer)
 
     no_doubles = list(set(words))
     no_doubles.sort()
