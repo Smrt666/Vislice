@@ -1,7 +1,6 @@
 import argparse
 
 from collector.sskj_collector import get_all_words, sanitize, extract_nouns, extract_words
-from collector.usage_counter import words_usage
 from solver.game import Strategy
 
 import json
@@ -184,26 +183,6 @@ match args := parser.parse_args():
         print("\nRunning tests in collector/  (unchanged website structure tests)")
         collector_suite = unittest.TestLoader().discover("collector")
         runner.run(collector_suite)
-
-    case argparse.Namespace(
-        action="usage", words=words, lang=lang, threads=threads, noprogress=noprogress, output=output, sort=sort
-    ):
-        print(f"Counting usage of words in {words.name}...")
-
-        words = [str(line.strip()) for line in words.read().split("\n")]
-
-        print(f"Found {len(words)} words to count usage for. Googling...")
-        usage = words_usage(words, lang, threads, not noprogress)
-
-        if sort:
-            usage = sorted(usage.items(), key=lambda item: item[1], reverse=True)
-        else:
-            usage = usage.items()
-
-        print(f"Usage counted. Saving to {output.name}...")
-        output.write("\n".join([f"{word},{count}" for word, count in usage]))
-
-        print("Done.")
 
     case _:
         print(f"Unsupported command arguments: {vars(args)}")
