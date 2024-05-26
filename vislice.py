@@ -140,7 +140,7 @@ match args := parser.parse_args():
         file.write("\n".join(words))
         file.close()
         print(f"Stored {len(words)} words into {file.name}")
-    case argparse.Namespace(action="getstrategy", length=length, words=words, output=output, limit=limit, hint=False):
+    case argparse.Namespace(action="getstrategy", length=length, words=words, output=output, limit=limit):
         print(f"Finding strategy for words in {words.name}...")
         words = [str(line.strip()) for line in words.read().split()]  # split by whitespace
         words = [word for word in words if len(word) == length]
