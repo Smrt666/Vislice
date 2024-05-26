@@ -218,6 +218,8 @@ class Strategy:
         Attribute start can be used to access the root of the decision tree, which is of type Choice."""
 
         if isinstance(tree, list):
+            wordlen = len(tree[0])
+            assert (len(word) == wordlen for word in tree), "All words should have the same length."
             alphabet = set.union(*(set(word.lower()) for word in tree))
             alphabet = "".join(sorted(alphabet))
             tree = GameStateTree(tree, alphabet)

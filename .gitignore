@@ -169,5 +169,3 @@ cython_debug/
 
 # data
 data/*
-!data/README.md
-!data/sskj_words_static.txt

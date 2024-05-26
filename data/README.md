@@ -1,5 +1,3 @@
-# Data
-Tukaj se nahajajo podatki, večinoma ne sodijo na git.
-Ker je pobiranje besed s SSKJ zamudno, je prečiščena verzija besed shranjena `sskj_words_static.txt`.
-Za drugačne različice te datoteke (neprečiščene verzije, ...), ki niso uporabljene za osnovni namen
-tega projekta, se lahko lokalno požene `vislice.py sskjcollect` s spremenjenimi opcijami, ...
+version https://git-lfs.github.com/spec/v1
+oid sha256:fd88358389505681c5ee0df484843bbafdb24a51b7f594dbd9c7de09477e5955
+size 628

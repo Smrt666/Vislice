@@ -2,6 +2,7 @@ import argparse
 
 from collector.sskj_collector import get_all_words, sanitize, extract_nouns, extract_words
 from solver.game import Strategy
+from solver.hinter import HintedGame
 
 import json
 import time
@@ -80,46 +81,27 @@ getstrategy_parser.add_argument(
     help="limit the number of words to find strategy for (default: all)",
 )
 
-# usage
-usage_parser = subparsers.add_parser("usage", help="Count usage of words. Format: word,count <newline> word,count <newline>...")
-usage_parser.add_argument(
+# getstrategy with hint
+hinted_parser = subparsers.add_parser("hintstrat", help="Find strategy for a word list with first letter as a hint.")
+hinted_parser.add_argument(
     "words",
     action="store",
     type=argparse.FileType("r", encoding="UTF-8"),
-    help="file with words to count usage for",
+    help="file with words to find strategy for",
 )
-usage_parser.add_argument(
-    "--lang",
-    action="store",
-    type=str,
-    default="sl",
-    help="language of the search engine (default: sl)",
-)
-usage_parser.add_argument(
-    "--threads",
-    action="store",
-    type=int,
-    default=100,
-    help="maximum number of threads to use (default: 100)",
-)
-usage_parser.add_argument(
-    "--noprogress",
-    action="store_true",
-    default=False,
-    help="show progress while counting usage (default)",
-)
-usage_parser.add_argument(
+hinted_parser.add_argument(
     "--output",
     action="store",
     type=argparse.FileType("w+", encoding="UTF-8"),
-    default="data/usage.csv",
-    help="file to save usage to (default: data/usage.csv)",
+    default="data/hstrategy.json",
+    help="file to save strategy to (default: data/hstrategy.json)",
 )
-usage_parser.add_argument(
-    "--sort",
-    action="store_true",
-    default=False,
-    help="sort the words by usage (default: False)",
+hinted_parser.add_argument(
+    "--limit",
+    action="store",
+    type=int,
+    default=None,
+    help="limit the number of words to find strategy for (default: all)",
 )
 
 # run all tests
@@ -158,7 +140,7 @@ match args := parser.parse_args():
         file.write("\n".join(words))
         file.close()
         print(f"Stored {len(words)} words into {file.name}")
-    case argparse.Namespace(action="getstrategy", length=length, words=words, output=output, limit=limit):
+    case argparse.Namespace(action="getstrategy", length=length, words=words, output=output, limit=limit, hint=False):
         print(f"Finding strategy for words in {words.name}...")
         words = [str(line.strip()) for line in words.read().split()]  # split by whitespace
         words = [word for word in words if len(word) == length]
@@ -171,6 +153,22 @@ match args := parser.parse_args():
         print(f"Strategy found. Maximal number of wrong guessess is {strategy.max_errors}. Saving to {output.name}...")
         output.write(json.dumps(strategy.json(), indent=1, ensure_ascii=False))
         print(f"Stored strategy for {len(words)} words into {output.name}. Took {time.time() - time0:.2f} seconds.")
+
+    case argparse.Namespace(action="hintstrat", words=words, output=output, limit=limit):
+        print(f"Finding strategy for words in {words.name}...")
+        words = [str(line.strip()) for line in words.read().split()]  # split by whitespace
+        if limit is not None:
+            words = words[:limit]
+
+        print(f"Found {len(words)} words to find strategy for. Computing strategy... (Might take a while.)")
+        time0 = time.time()
+        strategy = HintedGame(words)
+        strategy.strategize()
+        max_errors = max((strat.max_errors for strat in strategy.strategies.values()))
+        print(f"Strategy found. Maximal number of wrong guessess is {max_errors}. Saving to {output.name}...")
+        output.write(json.dumps(strategy.json(), indent=1, ensure_ascii=False))
+        print(f"Stored strategy for {len(words)} words into {output.name}. Took {time.time() - time0:.2f} seconds.")
+
     case argparse.Namespace(action="test", out=out):
         import unittest
 

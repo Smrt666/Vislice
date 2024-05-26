@@ -1,0 +1,7 @@
+# Leave this as is
+!.gitignore
+
+# Files to store on the git lfs
+!README.md
+!sskj_words_static.txt
+!nouns_si_strategy_hinted.json
