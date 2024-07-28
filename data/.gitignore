@@ -1,5 +1,6 @@
 # Leave this as is
 !.gitignore
+!get_lf_no_lfs.py
 
 # Files to store on the git lfs
 !README.md

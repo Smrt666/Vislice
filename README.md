@@ -18,6 +18,9 @@ ki preverijo, da se spletne strani s katerih se pobirajo podatki niso preveč sp
 Ti testi niso preveč zanesljivi, so pa dober prvi korak za odkrivanje težav.
 
 ### Podatki
+Če nimate naloženega git lfs, lahko že zbrane podatke (in izračunano strategijo) naložite s pomočjo ukaza `./data/get_lf_no_lfs.py`. Če imate git lfs, potem lahko uporabite ukaza
+`git lfs fetch --all` in `git lfs pull`.
+
 Podatki so bili pobrani s [SSKJ](https://www.fran.si/iskanje?FilteredDictionaryIds=130&View=1&Query=%2A). Shranjeni
 so v `data/nouns_si.txt`. Podatke je možno dobiti tudi s pomočjo skripte `vislice.py sskjcollect --nounsonly`. (Glej
 `vislice.py sskjcollect -h` za več informacij.) Z vklopljeno opcijo `--raw` je sortiranje drugačno (splošno sortiranje nizov).
