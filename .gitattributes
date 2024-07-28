@@ -1,3 +1,4 @@
 data/* filter=lfs diff=lfs merge=lfs -text
 data/.gitignore filter= diff= merge= text
 data/README.md filter= diff= merge= text
+data/get_lf_no_lfs.py filter= diff= merge= text
