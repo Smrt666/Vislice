@@ -4,7 +4,7 @@ import requests
 import io
 import contextlib
 
-from collector.sskj_collector import get_sskj_page, extract_words, get_all_words, extract_nouns, sanitize
+from .sskj_collector import get_sskj_page, extract_words, get_all_words, extract_nouns, sanitize
 
 
 class TestSSKJCollector(unittest.TestCase):

@@ -1,4 +1,4 @@
-from solver.game import WordShape, get_tti, Strategy
+from .game import WordShape, get_tti, Strategy
 from typing import Any
 
 

@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup, Tag
-from collector.utils import multirun
+from .utils import multirun
 from typing import Callable
 
 

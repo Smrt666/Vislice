@@ -1,8 +1,8 @@
 import argparse
 
-from collector.sskj_collector import get_all_words, sanitize, extract_nouns, extract_words
-from solver.game import Strategy
-from solver.hinter import HintedGame
+from src.collector.sskj_collector import get_all_words, sanitize, extract_nouns, extract_words
+from src.solver.game import Strategy
+from src.solver.hinter import HintedGame
 
 import json
 import time
