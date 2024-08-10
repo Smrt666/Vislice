@@ -13,8 +13,7 @@ python [pakete](requirements.txt), ki jih lahko naložite s pomočjo ukaza:
 `pip install -r requirements.txt`.
 
 Če izgleda, kot da koda ne deluje, ima napisanih nekaj testov. Ukaz `vislice.py test`
-izvede dve vrsti testov, teste v `test/`, ki preverjajo pravilnost kode in teste v `collector/`,
-ki preverijo, da se spletne strani s katerih se pobirajo podatki niso preveč spremenile.
+izvede dve vrsti testov, teste v `test/`, ki preverjajo pravilnost kode in da se spletne strani s katerih se pobirajo podatki niso preveč spremenile.
 Ti testi niso preveč zanesljivi, so pa dober prvi korak za odkrivanje težav.
 
 ### Podatki
