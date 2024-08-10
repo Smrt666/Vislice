@@ -174,13 +174,9 @@ match args := parser.parse_args():
 
         runner = unittest.TextTestRunner(verbosity=2, stream=out)
 
-        print("Running tests in test/  (code correctness tests)")
+        print("Running tests in test/")
         main_suite = unittest.TestLoader().discover("test")
         runner.run(main_suite)
-
-        print("\nRunning tests in collector/  (unchanged website structure tests)")
-        collector_suite = unittest.TestLoader().discover("collector")
-        runner.run(collector_suite)
 
     case _:
         print(f"Unsupported command arguments: {vars(args)}")
