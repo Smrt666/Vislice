@@ -1,6 +1,6 @@
 import unittest
 
-from solver.hinter import HintedGame, make_hint
+from src.solver.hinter import HintedGame, make_hint
 
 
 class TestHintedGame(unittest.TestCase):

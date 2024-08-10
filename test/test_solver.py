@@ -1,6 +1,6 @@
 import unittest
 
-from solver.game import GameStateTree, get_tti, Strategy
+from src.solver.game import GameStateTree, get_tti, Strategy
 
 
 class TestGameStateTree(unittest.TestCase):
