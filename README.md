@@ -1,6 +1,7 @@
 # Vislice
 Projekt pri predmetu UVP. Namen tega projekta je poiskati najboljšo strategijo za ugibanje posameznih besed pri igri [vislice](https://en.wikipedia.org/wiki/Hangman_(game)).
 Pr tem uporabljamo "vse" besede iz [SSKJ](https://www.fran.si/iskanje?page=2&FilteredDictionaryIds=130&View=1&Query=*).
+Analiza podatkov in več podrobnosti o projektu si lahko pogledate v [analizi](vislice.ipynb).
 
 Za najboljšo strategijo definiramo strategijo, pri kateri bomo v najslabšem primeru naredili najmanjše število napačnih ugibanj.
 Recimo, da imamo seznam 100 besed in dve strategiji. Recimo, da s prvo strategijo uganemo 95 besed brez napak, eno z dvema,
@@ -24,8 +25,6 @@ Podatki so bili pobrani s [SSKJ](https://www.fran.si/iskanje?FilteredDictionaryI
 so v `data/nouns_si.txt`. Podatke je možno dobiti tudi s pomočjo skripte `vislice.py sskjcollect --nounsonly`. (Glej
 `vislice.py sskjcollect -h` za več informacij.) Z vklopljeno opcijo `--raw` je sortiranje drugačno (splošno sortiranje nizov).
 Brez te opcije se sortira po slovenski abecedi.
-
-Analizo podatkov in več podrobnosti o njih si lahko pogledate v [analizi](analysis/vislice.ipynb).
 
 ### Izračun strategije
 Izračun strategije lahko poženemo z ukazom `vislice.py getstrategy {dolzina_besed} {datoteka_z_besedami}`.
