@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v2.3.0
+  rev: v4.6.0
   hooks:
     - id: check-yaml
     - id: end-of-file-fixer
@@ -9,7 +9,7 @@ repos:
       exclude: data/.+\.txt
 - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff version.
-  rev: v0.4.2
+  rev: v0.6.1
   hooks:
     # Run the formatter.
     - id: ruff-format
@@ -19,6 +19,6 @@ repos:
       types_or: [ python, pyi, jupyter ]
       args: [ --fix ]
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.362
+  rev: v1.1.376
   hooks:
-  - id: pyright
+    - id: pyright

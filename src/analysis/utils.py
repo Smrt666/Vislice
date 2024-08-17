@@ -1,3 +1,6 @@
+import numpy as np  # type: ignore
+
+
 def one_letter_away_words(word: str, word_list: list[str], checked_shapes: set[tuple[int, str]]) -> list[list[str]]:
     groups = []
     for i in range(len(word)):
@@ -37,3 +40,17 @@ def largest_1_letter_away_group(word_list: list[str]) -> list[str]:
     if alternatives:
         print(f"Found alternative groups of size {len(largest)} for {largest}: {alternatives}")
     return largest
+
+
+def explode(data):
+    if len(data.shape) == 3:
+        size = np.array(data.shape) * 2
+        data_e = np.zeros(size - 1, dtype=data.dtype)
+        data_e[::2, ::2, ::2] = data
+        return data_e
+    elif len(data.shape) == 4:
+        size = np.array(data.shape) * 2
+        size[-1] = data.shape[-1] + 1
+        data_e = np.zeros(size - 1, dtype=data.dtype)
+        data_e[::2, ::2, ::2, :] = data
+        return data_e
