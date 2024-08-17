@@ -1,6 +1,6 @@
 # Vislice
 Projekt pri predmetu UVP. Namen tega projekta je poiskati najboljšo strategijo za ugibanje posameznih besed pri igri [vislice](https://en.wikipedia.org/wiki/Hangman_(game)).
-Pr tem uporabljamo "vse" besede iz [SSKJ](https://www.fran.si/iskanje?page=2&FilteredDictionaryIds=130&View=1&Query=*).
+Pr tem uporabljamo "vse" samostalnike iz [SSKJ](https://www.fran.si/iskanje?page=2&FilteredDictionaryIds=130&View=1&Query=*).
 Analizo podatkov in več podrobnosti o projektu si lahko pogledate v [analizi](vislice.ipynb).
 
 Za najboljšo strategijo definiramo strategijo, pri kateri bomo v najslabšem primeru naredili najmanjše število napačnih ugibanj.
